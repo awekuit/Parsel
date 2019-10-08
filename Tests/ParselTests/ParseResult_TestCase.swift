@@ -41,20 +41,20 @@ class ParseResult_TestCase: XCTestCase {
         return .success(result: value, rest: rest)
     }
     
-    func test_flatMap_success() {
+    func test_flatMap_success() throws {
         var res = ParseResult.success(result: 1, rest: "+2")
-        let mappedRes1 = res.flatMap(validate)
+        let mappedRes1 = try res.flatMap(validate)
         
         XCTAssertTrue(mappedRes1 == res)
         
         res = ParseResult.success(result: 10, rest: "+2")
-        let mappedRes2 = res.flatMap(validate)
+        let mappedRes2 = try res.flatMap(validate)
         XCTAssertTrue(mappedRes2 == .fail(TestError(1)))
     }
     
-    func test_flatMap_fail() {
+    func test_flatMap_fail() throws {
         let res = ParseResult<String, Int>.fail(TestError(1))
-        let mappedRes = res.flatMap(validate)
+        let mappedRes = try res.flatMap(validate)
         XCTAssertTrue(res == mappedRes)
     }
     

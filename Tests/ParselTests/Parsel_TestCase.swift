@@ -10,13 +10,13 @@ import XCTest
 
 class Parsel_TestCase: XCTestCase {
     
-    func test_addition() {
+    func test_addition() throws {
         
         let addition = number ~ L.plus ~ number ^^ { a, _, b in
             return a + b
         }
         
-        let res = addition.parse("1234+56")
+        let res = try addition.parse("1234+56")
         XCTAssertEqual(1290, try res.unwrap())
     }
     
@@ -39,7 +39,7 @@ class Parsel_TestCase: XCTestCase {
         }
         
         let addition1 = digit ~ L.plus ~ digit ^^ { $0 + $2 } // "+".r is a RegexParser that parses the `+` sign
-        let result1 = addition1.parse("2+4")
+        let result1 = try addition1.parse("2+4")
         
         XCTAssertEqual(try result1.unwrap(), 6)
         
@@ -54,7 +54,7 @@ class Parsel_TestCase: XCTestCase {
             return a + b
         }
         
-        let result2 = addition2.parse("123+456")
+        let result2 = try addition2.parse("123+456")
         XCTAssertEqual(try result2.unwrap(), 579)
     }
     

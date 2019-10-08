@@ -9,7 +9,7 @@
 open class Parser<T, R> where T: Sequence {
     
     /// ParseFunction is the type of the wrapped function type
-    public typealias ParseFunction = (T) -> ParseResult<T, R>
+    public typealias ParseFunction = (T) throws -> ParseResult<T, R>
     
     /// The wrapped function, call to start the parsing process.
     private let parseFunction: ParseFunction
@@ -25,16 +25,20 @@ open class Parser<T, R> where T: Sequence {
     ///
     /// - Parameter input: the token sequence that should be parsed
     /// - Returns: the result of the parsing operation
-    public func parse(_ input: T) -> ParseResult<T, R> {
-        return self.parseFunction(input)
+    public func parse(_ input: T) throws -> ParseResult<T, R> {
+        return try self.parseFunction(input)
     }
 
     /// Starts the parsing with that parser
     ///
     /// - Parameter input: calls self.parse with the given input
     public subscript(_ input: T) -> ParseResult<T, R> {
-        return self.parse(input)
-    }
+        do {
+          return try self.parse(input)
+        } catch {
+            return .fail(Errors.subscriptFailed)
+        }
+     }
     
     /// just creates a parser that parses the given value as success
     ///
@@ -68,8 +72,8 @@ open class Parser<T, R> where T: Sequence {
     /// - Returns: a new parser that combines both parse operations.
     public func flatMap<B>(_ tranform: @escaping (R) -> Parser<T, B>) -> Parser<T, B> {
         return Parser<T, B> { tokens in
-            return self.parse(tokens).flatMap { result, rest in
-                return tranform(result).parse(rest)
+            return try self.parse(tokens).flatMap { result, rest in
+                return try tranform(result).parse(rest)
             }
         }
     }
@@ -90,7 +94,7 @@ open class Parser<T, R> where T: Sequence {
     /// - Returns: a parser that parses self and transforms the error if failed
     public func mapError(_ transform: @escaping (ParseError) -> ParseError) -> Parser<T, R> {
         return Parser { str in
-            return self.parse(str).mapError(transform)
+            return try self.parse(str).mapError(transform)
         }
     }
     

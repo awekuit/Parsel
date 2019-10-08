@@ -10,15 +10,15 @@ import XCTest
 
 class Parser_Conjunction_TestCase: XCTestCase {
 
-    func test_or() {
+    func test_or() throws {
         let p1 = char("a").or(char("b"))
         
-        let res = p1.parse("ab")
+        let res = try p1.parse("ab")
         XCTAssertTrue(res == .success(result: "a", rest: "b"))
         
         let p2 = char("b").or(char("a"))
         
-        let res2 = p2.parse("ab")
+        let res2 = try p2.parse("ab")
         XCTAssertTrue(res2 == .success(result: "a", rest: "b"))
     }
     
@@ -27,13 +27,13 @@ class Parser_Conjunction_TestCase: XCTestCase {
         let oneToNine = (1...9).map({string(String($0))})
         let p = zero.or(oneToNine) ^^ { Int($0)! }
         
-        let res1 = p.parse("0")
+        let res1 = try p.parse("0")
         XCTAssertEqual(try res1.unwrap(), 0)
         
-        let res2 = p.parse("3")
+        let res2 = try p.parse("3")
         XCTAssertEqual(try res2.unwrap(), 3)
         
-        let res3 = p.parse("a")
+        let res3 = try p.parse("a")
         XCTAssertTrue(res3.isFailed())
     }
     
@@ -41,20 +41,20 @@ class Parser_Conjunction_TestCase: XCTestCase {
         let zeroToNine = (0...9).map({string(String($0))})
         let p = Parser.or(zeroToNine) ^^ { Int($0)! }
         
-        let res1 = p.parse("0")
+        let res1 = try p.parse("0")
         XCTAssertEqual(try res1.unwrap(), 0)
         
-        let res2 = p.parse("3")
+        let res2 = try p.parse("3")
         XCTAssertEqual(try res2.unwrap(), 3)
         
-        let res3 = p.parse("a")
+        let res3 = try p.parse("a")
         XCTAssertTrue(res3.isFailed())
     }
     
     func test_or_static_collection_fail() throws {
         let p = Parser.or([Parser<String, String>]())
         
-        let res = p.parse("a")
+        let res = try p.parse("a")
         
         XCTAssertTrue(res.isFailed())
         
@@ -63,24 +63,24 @@ class Parser_Conjunction_TestCase: XCTestCase {
         }
     }
 
-    func test_then() {
+    func test_then() throws{
         let p = char("a").then(char("b"))
         
-        let res = p.parse("abc")
+        let res = try p.parse("abc")
         XCTAssertTrue(res == .success(result: "b", rest: "c"))
     }
     
-    func test_fallback() {
+    func test_fallback() throws{
         let p = char("a").fallback("b")
         
-        let res = p.parse("cba")
+        let res = try p.parse("cba")
         XCTAssertTrue(res == .success(result: "b", rest: "cba"))
         
-        let res2 = p.parse("abc")
+        let res2 = try p.parse("abc")
         XCTAssertTrue(res2 == .success(result: "a", rest: "bc"))
     }
     
-    func test_fallback_parser() {
+    func test_fallback_parser() throws{
         let p1 = char("a")
         let p2 = char("b")
         
@@ -94,23 +94,23 @@ class Parser_Conjunction_TestCase: XCTestCase {
     func test_atLeastOnce() throws {
         let p1 = char("a").atLeastOne
         
-        let res1 = p1.parse("aaaa")
+        let res1 = try p1.parse("aaaa")
         XCTAssertEqual(try res1.unwrap(), ["a", "a", "a", "a"])
         
-        let res2 = p1.parse("b")
+        let res2 = try p1.parse("b")
         XCTAssertTrue(res2.isFailed())
     }
     
     func test_atLeast_count() throws {
         let p1 = char("a").atLeast(count: 4)
         
-        let res1 = p1.parse("aaaa")
+        let res1 = try p1.parse("aaaa")
         XCTAssertEqual(try res1.unwrap(), ["a", "a", "a", "a"])
         
-        let res2 = p1.parse("aaaaa")
+        let res2 = try p1.parse("aaaaa")
         XCTAssertEqual(try res2.unwrap(), ["a", "a", "a", "a", "a"])
         
-        let res3 = p1.parse("aaa")
+        let res3 = try p1.parse("aaa")
         guard case let .expectedAtLeast(count, got: got) = try res3.error() as! Errors else {
             return XCTFail()
         }
@@ -121,45 +121,45 @@ class Parser_Conjunction_TestCase: XCTestCase {
     func test_exactly() throws {
         let p = char("a").exactly(count: 4)
         
-        let res1 = p.parse("aaaa")
+        let res1 = try p.parse("aaaa")
         XCTAssertEqual(try res1.unwrap(), ["a", "a", "a", "a"])
         
-        let res2 = p.parse("aaaaa")
+        let res2 = try p.parse("aaaaa")
         XCTAssertEqual(try res2.unwrap(), ["a", "a", "a", "a"])
         
-        let res3 = p.parse("aaa")
+        let res3 = try p.parse("aaa")
         XCTAssertEqual(try res3.error() as! TestError, TestError(1))
     }
     
     func test_atLeastOnce_sep() throws {
         let p1 = char("a").atLeastOnce(sep: string(", "))
         
-        let res1 = p1.parse("a, a, a, a")
+        let res1 = try p1.parse("a, a, a, a")
         XCTAssertEqual(try res1.unwrap(), ["a", "a", "a", "a"])
         
-        let res2 = p1.parse("aaaa")
+        let res2 = try p1.parse("aaaa")
         XCTAssertEqual(try res2.unwrap(), ["a"])
         
-        let res3 = p1.parse("b")
+        let res3 = try p1.parse("b")
         XCTAssertTrue(res3.isFailed())
     }
     
     func test_rep() throws {
         let list = char("[") ~> digit.rep(sep: string(", ")) <~ char("]")
-        let result = list.parse("[1, 2, 3, 4]")
+        let result = try list.parse("[1, 2, 3, 4]")
         XCTAssertEqual(try result.unwrap(), [1, 2, 3, 4])
     }
     
     func test_rep2() throws {
-        let result = number.parse("1234")
+        let result = try number.parse("1234")
         XCTAssertEqual(try result.unwrap(), 1234)
     }
     
     func test_rep_fail() throws {
-        let res1 = digit.rep.parse("a")
+        let res1 = try digit.rep.parse("a")
         XCTAssertEqual(try res1.unwrap(), [])
         
-        let res2 = digit.rep(sep: char("+")).parse("-5+4")
+        let res2 = try digit.rep(sep: char("+")).parse("-5+4")
         XCTAssertEqual(try res2.unwrap(), [])
     }
     
@@ -168,8 +168,8 @@ class Parser_Conjunction_TestCase: XCTestCase {
         let t = p.typeErased
         
         let input = "abc"
-        let res1 = p.parse(input)
-        let res2 = t.parse(input)
+        let res1 = try p.parse(input)
+        let res2 = try t.parse(input)
         
         XCTAssertTrue(res1.isSuccess())
         XCTAssertTrue(res2.isSuccess())
@@ -177,8 +177,8 @@ class Parser_Conjunction_TestCase: XCTestCase {
         XCTAssertEqual(try res1.rest(), try res2.rest())
         
         let input2 = "bca"
-        let res3 = p.parse(input2)
-        let res4 = t.parse(input2)
+        let res3 = try p.parse(input2)
+        let res4 = try t.parse(input2)
         
         XCTAssertTrue(res3.isFailed())
         XCTAssertTrue(res4.isFailed())
@@ -187,11 +187,11 @@ class Parser_Conjunction_TestCase: XCTestCase {
     func test_optional() throws {
         let p1 = char("a").optional
         
-        let res1 = p1.parse("abc")
+        let res1 = try p1.parse("abc")
         XCTAssertEqual(try res1.unwrap(), "a")
         XCTAssertEqual(try res1.rest(), "bc")
         
-        let res2 = p1.parse("cba")
+        let res2 = try p1.parse("cba")
         XCTAssertTrue(res2.isSuccess())
         XCTAssertEqual(try res2.unwrap(), nil)
         XCTAssertEqual(try res2.rest(), "cba")

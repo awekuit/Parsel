@@ -13,11 +13,11 @@ class Lexical_TestCase: XCTestCase {
     func test_char() throws {
         let p = L.char
         
-        let res1 = p.parse("ab")
+        let res1 = try p.parse("ab")
         XCTAssertEqual(try res1.unwrap(), "a")
         XCTAssertEqual(try res1.rest(), "b")
         
-        let res2 = p.parse("")
+        let res2 = try p.parse("")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
@@ -28,14 +28,14 @@ class Lexical_TestCase: XCTestCase {
     func test_char_condition() throws {
         let p = L.char { L.asciiValue(from: $0) >= L.asciiValue(from: "a") }
         
-        let res1 = p.parse("ABC")
+        let res1 = try p.parse("ABC")
         guard case let .unexpectedToken(expected, got)? = try res1.error() as? L.Error else {
             return XCTFail()
         }
         XCTAssertEqual(expected, "certain char")
         XCTAssertEqual(got, "A")
         
-        let res2 = p.parse("abc")
+        let res2 = try p.parse("abc")
         XCTAssertEqual(try res2.unwrap(), "a")
         XCTAssertEqual(try res2.rest(), "bc")
     }
@@ -43,18 +43,18 @@ class Lexical_TestCase: XCTestCase {
     func test_char_specific() throws {
         let p = L.char("a")
         
-        let res1 = p.parse("ab")
+        let res1 = try p.parse("ab")
         XCTAssertEqual(try res1.unwrap(), "a")
         XCTAssertEqual(try res1.rest(), "b")
 
-        let res2 = p.parse("ba")
+        let res2 = try p.parse("ba")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
         XCTAssertEqual(expected, "a")
         XCTAssertEqual(got, "b")
 
-        let res3 = p.parse("")
+        let res3 = try p.parse("")
         guard case let .unexpectedToken(expected2, got2) = try res3.error() as! L.Error else {
             return XCTFail()
         }
@@ -65,11 +65,11 @@ class Lexical_TestCase: XCTestCase {
     func test_string() throws {
         let p = L.string("abc")
         
-        let res1 = p.parse("abcde")
+        let res1 = try p.parse("abcde")
         XCTAssertEqual(try res1.unwrap(), "abc")
         XCTAssertEqual(try res1.rest(), "de")
         
-        let res2 = p.parse("edcba")
+        let res2 = try p.parse("edcba")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
@@ -80,11 +80,11 @@ class Lexical_TestCase: XCTestCase {
     func test_string_length() throws {
         let p = L.string(length: 3)
         
-        let res1 = p.parse("aaaaa")
+        let res1 = try p.parse("aaaaa")
         XCTAssertEqual(try res1.unwrap(), "aaa")
         XCTAssertEqual(try res1.rest(), "aa")
         
-        let res2 = p.parse("aa")
+        let res2 = try p.parse("aa")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
@@ -95,11 +95,11 @@ class Lexical_TestCase: XCTestCase {
     func test_digit() throws {
         let p = L.digit
         
-        let res1 = p.parse("1a")
+        let res1 = try p.parse("1a")
         XCTAssertEqual(try res1.unwrap(), 1)
         XCTAssertEqual(try res1.rest(), "a")
         
-        let res2 = p.parse("a1")
+        let res2 = try p.parse("a1")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
@@ -110,11 +110,11 @@ class Lexical_TestCase: XCTestCase {
     func test_binaryDigit() throws {
         let p = L.binaryDigit
         
-        let res1 = p.parse("11a")
+        let res1 = try p.parse("11a")
         XCTAssertEqual(try res1.unwrap(), 1)
         XCTAssertEqual(try res1.rest(), "1a")
         
-        let res2 = p.parse("2")
+        let res2 = try p.parse("2")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
@@ -125,18 +125,18 @@ class Lexical_TestCase: XCTestCase {
     func test_binaryNumber() throws {
         let p = L.binaryNumber
         
-        let res1 = p.parse("0b10110110a")
+        let res1 = try p.parse("0b10110110a")
         XCTAssertEqual(try res1.unwrap(), 182)
         XCTAssertEqual(try res1.rest(), "a")
         
-        let res2 = p.parse("0xAF3410")
+        let res2 = try p.parse("0xAF3410")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
         XCTAssertEqual(expected, "0b")
         XCTAssertEqual(got, "0x")
         
-        let res3 = p.parse("0b2")
+        let res3 = try p.parse("0b2")
         guard case let .unexpectedToken(expected2, got2) = try res3.error() as! L.Error else {
             return XCTFail()
         }
@@ -147,11 +147,11 @@ class Lexical_TestCase: XCTestCase {
     func test_octalDigit() throws {
         let p = L.octalDigit
         
-        let res1 = p.parse("77a")
+        let res1 = try p.parse("77a")
         XCTAssertEqual(try res1.unwrap(), 7)
         XCTAssertEqual(try res1.rest(), "7a")
         
-        let res2 = p.parse("8")
+        let res2 = try p.parse("8")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
@@ -162,18 +162,18 @@ class Lexical_TestCase: XCTestCase {
     func test_octalNumber() throws {
         let p = L.octalNumber
         
-        let res1 = p.parse("0o12372106a")
+        let res1 = try p.parse("0o12372106a")
         XCTAssertEqual(try res1.unwrap(), 2749510)
         XCTAssertEqual(try res1.rest(), "a")
         
-        let res2 = p.parse("0xAF3410")
+        let res2 = try p.parse("0xAF3410")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
         XCTAssertEqual(expected, "0o")
         XCTAssertEqual(got, "0x")
         
-        let res3 = p.parse("0o8")
+        let res3 = try p.parse("0o8")
         guard case let .unexpectedToken(expected2, got2) = try res3.error() as! L.Error else {
             return XCTFail()
         }
@@ -184,37 +184,37 @@ class Lexical_TestCase: XCTestCase {
     func test_hexadecimalDigit() throws {
         let p = L.hexadecimalDigit
         
-        let res1 = p.parse("a7a")
+        let res1 = try p.parse("a7a")
         XCTAssertEqual(try res1.unwrap(), 10)
         XCTAssertEqual(try res1.rest(), "7a")
         
-        let res2 = p.parse("A7A")
+        let res2 = try p.parse("A7A")
         XCTAssertEqual(try res2.unwrap(), 10)
         XCTAssertEqual(try res2.rest(), "7A")
         
-        let res3 = p.parse("F7F")
+        let res3 = try p.parse("F7F")
         XCTAssertEqual(try res3.unwrap(), 15)
         XCTAssertEqual(try res3.rest(), "7F")
         
-        let res4 = p.parse("f7f")
+        let res4 = try p.parse("f7f")
         XCTAssertEqual(try res4.unwrap(), 15)
         XCTAssertEqual(try res4.rest(), "7f")
         
-        let res5 = p.parse("g")
+        let res5 = try p.parse("g")
         guard case let .unexpectedToken(expected, got) = try res5.error() as! L.Error else {
             return XCTFail()
         }
         XCTAssertEqual(expected, "0 to 15")
         XCTAssertEqual(got, "-1")
         
-        let res6 = p.parse(",")
+        let res6 = try p.parse(",")
         guard case let .unexpectedToken(expected2, got2) = try res6.error() as! L.Error else {
             return XCTFail()
         }
         XCTAssertEqual(expected2, "0 to 15")
         XCTAssertEqual(got2, "-1")
         
-        let res7 = p.parse("")
+        let res7 = try p.parse("")
         guard case let .unexpectedToken(expected3, got3) = try res7.error() as! L.Error else {
             return XCTFail()
         }
@@ -225,26 +225,26 @@ class Lexical_TestCase: XCTestCase {
     func test_hexadecimalNumber() throws {
         let p = L.hexadecimalNumber
         
-        let res1 = p.parse("0xdeadg")
+        let res1 = try p.parse("0xdeadg")
         XCTAssertEqual(try res1.unwrap(), 57005)
         XCTAssertEqual(try res1.rest(), "g")
         
-        let res2 = p.parse("0xDEADG")
+        let res2 = try p.parse("0xDEADG")
         XCTAssertEqual(try res2.unwrap(), 57005)
         XCTAssertEqual(try res2.rest(), "G")
         
-        let res3 = p.parse("0x12345G")
+        let res3 = try p.parse("0x12345G")
         XCTAssertEqual(try res3.unwrap(), 74565)
         XCTAssertEqual(try res3.rest(), "G")
         
-        let res4 = p.parse("0bAF3410")
+        let res4 = try p.parse("0bAF3410")
         guard case let .unexpectedToken(expected, got) = try res4.error() as! L.Error else {
             return XCTFail()
         }
         XCTAssertEqual(expected, "0X")
         XCTAssertEqual(got, "0b")
         
-        let res5 = p.parse("0xg")
+        let res5 = try p.parse("0xg")
         guard case let .unexpectedToken(expected2, got2) = try res5.error() as! L.Error else {
             return XCTFail()
         }
@@ -255,11 +255,11 @@ class Lexical_TestCase: XCTestCase {
     func test_decimalNumber() throws {
         let p = L.decimalNumber
         
-        let res1 = p.parse("1234a")
+        let res1 = try p.parse("1234a")
         XCTAssertEqual(try res1.unwrap(), 1234)
         XCTAssertEqual(try res1.rest(), "a")
         
-        let res2 = p.parse("abcde")
+        let res2 = try p.parse("abcde")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
@@ -267,20 +267,20 @@ class Lexical_TestCase: XCTestCase {
         XCTAssertEqual(got, "a")
     }
     
-    func test_unsignedNumber() {
+    func test_unsignedNumber() throws {
         let p = L.unsignedNumber
         
-        func test(input: String, result: Int, rest: String) {
-            let res = p.parse(input)
+        func test(input: String, result: Int, rest: String) throws {
+            let res = try p.parse(input)
             XCTAssertEqual(try res.unwrap(), result)
             XCTAssertEqual(try res.rest(), rest)
         }
         
-        test(input: "1234a", result: 1234, rest: "a")
-        test(input: "9a", result: 9, rest: "a")
-        test(input: "0x12345", result: 74565, rest: "")
-        test(input: "0b101011b", result: 43, rest: "b")
-        test(input: "0o342424", result: 115988, rest: "")
+        try test(input: "1234a", result: 1234, rest: "a")
+        try test(input: "9a", result: 9, rest: "a")
+        try test(input: "0x12345", result: 74565, rest: "")
+        try test(input: "0b101011b", result: 43, rest: "b")
+        try test(input: "0o342424", result: 115988, rest: "")
         
         XCTAssertThrowsError(try p.parse("-1234").unwrap())
         XCTAssertThrowsError(try p.parse("-0x12345").unwrap())
@@ -288,30 +288,30 @@ class Lexical_TestCase: XCTestCase {
         XCTAssertThrowsError(try p.parse("-0o342424").unwrap())
     }
     
-    func test_number() {
+    func test_number() throws {
         let p = L.number
         
-        func test(input: String, result: Int, rest: String) {
-            let res = p.parse(input)
+        func test(input: String, result: Int, rest: String) throws {
+            let res = try p.parse(input)
             XCTAssertEqual(try res.unwrap(), result)
             XCTAssertEqual(try res.rest(), rest)
         }
         
-        test(input: "-1234a", result: -1234, rest: "a")
-        test(input: "-9a", result: -9, rest: "a")
-        test(input: "-0x12345", result: -74565, rest: "")
-        test(input: "-0b101011b", result: -43, rest: "b")
-        test(input: "-0o342424", result: -115988, rest: "")
+        try test(input: "-1234a", result: -1234, rest: "a")
+        try test(input: "-9a", result: -9, rest: "a")
+        try test(input: "-0x12345", result: -74565, rest: "")
+        try test(input: "-0b101011b", result: -43, rest: "b")
+        try test(input: "-0o342424", result: -115988, rest: "")
     }
     
     func test_floatingNumber() throws {
         let p = L.floatingNumber
         
-        let res1 = p.parse("0,123a")
+        let res1 = try p.parse("0,123a")
         XCTAssertEqual(try res1.unwrap(), 0.123, accuracy: 0.0001)
         XCTAssertEqual(try res1.rest(), "a")
         
-        let res2 = p.parse("0.123a")
+        let res2 = try p.parse("0.123a")
         XCTAssertEqual(try res2.unwrap(), 0.123, accuracy: 0.0001)
         XCTAssertEqual(try res2.rest(), "a")
     }
@@ -319,11 +319,11 @@ class Lexical_TestCase: XCTestCase {
     func test_oneWhitespace() throws {
         let p = L.oneWhitespace
         
-        let res1 = p.parse(" a")
+        let res1 = try p.parse(" a")
         XCTAssertEqual(try res1.unwrap(), " ")
         XCTAssertEqual(try res1.rest(), "a")
         
-        let res2 = p.parse("a ")
+        let res2 = try p.parse("a ")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
@@ -334,11 +334,11 @@ class Lexical_TestCase: XCTestCase {
     func test_whitespaces() throws {
         let p = L.whitespaces ^^ { String($0) }
         
-        let res1 = p.parse("   \t\n\r\na")
+        let res1 = try p.parse("   \t\n\r\na")
         XCTAssertEqual(try res1.unwrap(), "   \t\n\r\n")
         XCTAssertEqual(try res1.rest(), "a")
         
-        let res2 = p.parse("a ")
+        let res2 = try p.parse("a ")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
@@ -349,11 +349,11 @@ class Lexical_TestCase: XCTestCase {
     func test_asciiChar() throws {
         let p = L.asciiChar
         
-        let res1 = p.parse("a")
+        let res1 = try p.parse("a")
         XCTAssertEqual(try res1.unwrap(), "a")
         XCTAssertEqual(try res1.rest(), "")
         
-        let res2 = p.parse("😜")
+        let res2 = try p.parse("😜")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
@@ -364,11 +364,11 @@ class Lexical_TestCase: XCTestCase {
     func test_asciiString() throws {
         let p = L.asciiString
         
-        let res1 = p.parse("abc😜")
+        let res1 = try p.parse("abc😜")
         XCTAssertEqual(try res1.unwrap(), "abc")
         XCTAssertEqual(try res1.rest(), "😜")
         
-        let res2 = p.parse("😜abc")
+        let res2 = try p.parse("😜abc")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
@@ -379,11 +379,11 @@ class Lexical_TestCase: XCTestCase {
     func test_lowercaseLetter() throws {
         let p = L.lowercaseLetter
         
-        let res1 = p.parse("abB")
+        let res1 = try p.parse("abB")
         XCTAssertEqual(try res1.unwrap(), "a")
         XCTAssertEqual(try res1.rest(), "bB")
         
-        let res2 = p.parse("Ab")
+        let res2 = try p.parse("Ab")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
@@ -394,11 +394,11 @@ class Lexical_TestCase: XCTestCase {
     func test_uppercaseLetter() throws {
         let p = L.uppercaseLetter
         
-        let res1 = p.parse("ABb")
+        let res1 = try p.parse("ABb")
         XCTAssertEqual(try res1.unwrap(), "A")
         XCTAssertEqual(try res1.rest(), "Bb")
         
-        let res2 = p.parse("aB")
+        let res2 = try p.parse("aB")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }
@@ -409,11 +409,11 @@ class Lexical_TestCase: XCTestCase {
     func test_letter() throws {
         let p = L.letter
         
-        let res1 = p.parse("ab1")
+        let res1 = try p.parse("ab1")
         XCTAssertEqual(try res1.unwrap(), "a")
         XCTAssertEqual(try res1.rest(), "b1")
         
-        let res2 = p.parse("1aB")
+        let res2 = try p.parse("1aB")
         guard case let .unexpectedToken(expected, got) = try res2.error() as! L.Error else {
             return XCTFail()
         }

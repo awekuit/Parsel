@@ -12,34 +12,34 @@ class Parser_TestCase: XCTestCase {
     
     // MARK: - Tests
     
-    func test_just() {
+    func test_just() throws {
         let p = Parser<String, Int>.just(3)
         
-        let res1 = p.parse("123")
+        let res1 = try p.parse("123")
         XCTAssertTrue(res1 == .success(result: 3, rest: "123"))
         
         // state should not change
-        let res2 = p.parse("123")
+        let res2 = try p.parse("123")
         XCTAssertTrue(res2 == .success(result: 3, rest: "123"))
     }
     
-    func test_init_producesSuccess() {
+    func test_init_producesSuccess() throws {
         let p = Parser<String, Int>.just(1)
         
-        let res = p.parse("123")
+        let res = try p.parse("123")
         XCTAssertTrue(res == .success(result: 1, rest: "123"))
     }
     
-    func test_init_producesFail() {
+    func test_init_producesFail() throws {
         let p = Parser<String, Int> { str in
             return .fail(TestError(1))
         }
         
-        let res = p.parse("123")
+        let res = try p.parse("123")
         XCTAssertTrue(res == .fail(TestError(1)))
     }
     
-    func test_init() {
+    func test_init() throws {
         let lit = Parser<String, Character> { str in
             guard let first = str.first else {
                 return .fail(TestError(1))
@@ -47,41 +47,41 @@ class Parser_TestCase: XCTestCase {
             return .success(result: first, rest: String(str.dropFirst()))
         }
         
-        let res1 = lit.parse("123")
+        let res1 = try lit.parse("123")
         XCTAssertTrue(res1 == .success(result: "1", rest: "23"))
         
-        let res2 = lit.parse("")
+        let res2 = try lit.parse("")
         XCTAssertTrue(res2 == .fail(TestError(1)))
     }
     
-    func test_flatMap_success() {
+    func test_flatMap_success() throws {
         let doubleA = char("a").flatMap(char)
-        let res1 = doubleA.parse("aab")
+        let res1 = try doubleA.parse("aab")
         XCTAssertTrue(res1 == .success(result: "a", rest: "b"))
         
         let doubleAPlusB = doubleA.flatMap { _ in char("b") }
-        let res2 = doubleAPlusB.parse("aab")
+        let res2 = try doubleAPlusB.parse("aab")
         XCTAssertTrue(res2 == .success(result: "b", rest: ""))
     }
     
-    func test_flatMap_fail() {
+    func test_flatMap_fail() throws {
         let doubleA = char("a").flatMap(char)
         
-        let res1 = doubleA.parse("")
+        let res1 = try doubleA.parse("")
         XCTAssertTrue(res1 == .fail(TestError(1)))
         
-        let res2 = doubleA.parse("ab")
+        let res2 = try doubleA.parse("ab")
         XCTAssertTrue(res2 == .fail(TestError(1)))
     }
     
-    func test_map() {
+    func test_map() throws {
         let p = string("abc")
         let pMapped = p.map { $0.count }
         
-        let res1 = pMapped.parse("abcde")
+        let res1 = try pMapped.parse("abcde")
         XCTAssertTrue(res1 == .success(result: 3, rest: "de"))
         
-        let res2 = pMapped.parse("edcba")
+        let res2 = try pMapped.parse("edcba")
         XCTAssertTrue(res2 == .fail(TestError(1)))
     }
     
@@ -97,22 +97,22 @@ class Parser_TestCase: XCTestCase {
             return nil
         }
         
-        let res1 = p.parse("aaa")
+        let res1 = try p.parse("aaa")
         XCTAssertEqual(try res1.unwrap(), ["a", "a", "a"])
         
-        let res2 = p.parse("aa")
+        let res2 = try p.parse("aa")
         XCTAssertTrue(res2.isFailed())
     }
     
     func test_fail_error() throws {
         let p = Parser<String, Int>.fail(error: TestError(1))
-        let res = p.parse("123")
+        let res = try p.parse("123")
         XCTAssertEqual(try res.error() as! TestError, TestError(1))
     }
     
     func test_fail_message() throws {
         let p = Parser<String, Int>.fail(message: "a message")
-        let res = p.parse("123")
+        let res = try p.parse("123")
         XCTAssertEqual(try res.error() as! GenericParseError, GenericParseError(message: "a message"))
     }
 
@@ -121,6 +121,7 @@ class Parser_TestCase: XCTestCase {
         let res = p["abc"]
         XCTAssertEqual(try res.unwrap(), "a")
     }
+
 }
 
 #if os(Linux)

@@ -18,7 +18,7 @@ extension Parser {
     /// Erases the type of the parser
     public var typeErased: Parser<T, ()> {
         return Parser<T, ()> { tokens in
-            switch self.parse(tokens) {
+            switch try self.parse(tokens) {
             case let .success(_, rest):
                 return .success(result: (), rest: rest)
             case let .fail(err):
@@ -42,10 +42,10 @@ extension Parser {
     /// - Returns: a parser that parses self and if it fails, if parses other
     public func or(_ other: @escaping @autoclosure () -> Parser<T, R>) -> Parser<T, R> {
         return Parser { tokens in
-            let result = self.parse(tokens)
+            let result = try self.parse(tokens)
             switch result {
             case .fail:
-                return other().parse(tokens)
+                return try other().parse(tokens)
             default:
                 return result
             }
@@ -59,13 +59,13 @@ extension Parser {
     /// - Returns: a parser that tries all concatenates parsers in order
     public func or<S: Sequence>(_ others: @escaping @autoclosure () -> S) -> Parser<T, R> where S.Element == Parser<T, R> {
         return Parser { tokens in
-            let result = self.parse(tokens)
+            let result = try self.parse(tokens)
             switch result {
             case let .success(result, rest):
                 return .success(result: result, rest: rest)
             case let .fail(err):
                 for parser in others() {
-                    if case let .success(result, rest) = parser.parse(tokens) {
+                    if case let .success(result, rest) = try parser.parse(tokens) {
                         return .success(result: result, rest: rest)
                     }
                 }
@@ -97,10 +97,14 @@ extension Parser {
     /// *NOTE* This parser never fails!
     public func fallback(_ defaultValue: @escaping @autoclosure () -> R) -> Parser<T, R> {
         return Parser { tokens in
-            let result = self.parse(tokens)
+            let result = try self.parse(tokens)
             switch result {
             case .fail:
-                return .success(result: defaultValue(), rest: tokens)
+                do {
+                    return .success(result: try defaultValue(), rest: tokens)
+                } catch {
+                    return .fail(Errors.fallbackFailed)
+                }
             default:
                 return result
             }
@@ -113,11 +117,11 @@ extension Parser {
     /// - Returns: a parser that first tries self.parse and only uses defaultValue if self failed.
     public func fallback(_ defaultValue: @escaping @autoclosure () -> Parser<T, R>) -> Parser<T, R> {
         return Parser { tokens in
-            switch self.parse(tokens) {
+            switch try self.parse(tokens) {
             case let .success(result, rest):
                 return .success(result: result, rest: rest)
             default:
-                return defaultValue().parse(tokens)
+                return try defaultValue().parse(tokens)
             }
         }
     }
@@ -174,7 +178,7 @@ extension Parser {
             var totalRest = tokens
 
             loop: while true {
-                switch self.parse(totalRest) {
+                switch try self.parse(totalRest) {
                 case let .success(result, rest):
                     results.append(result)
                     totalRest = rest
@@ -200,12 +204,12 @@ extension Parser {
             
             loop: while true {
                 
-                switch both.parse(totalRest) {
+                switch try both.parse(totalRest) {
                 case let .success(result, rest):
                     results.append(result)
                     totalRest = rest
                 case .fail:
-                    switch self.parse(totalRest) {
+                    switch try self.parse(totalRest) {
                     case let .success(singleResult, singleRest):
                         results.append(singleResult)
                         totalRest = singleRest

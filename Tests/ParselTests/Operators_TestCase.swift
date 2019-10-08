@@ -10,83 +10,83 @@ import XCTest
 
 class Operators_TestCase: XCTestCase {
 
-    func test_or_operator_first() {
+    func test_or_operator_first() throws {
         let p1 = char("a") | char("b")
         let p2 = char("a").or(char("b"))
         
         let input = "abc"
-        let res1 = p1.parse(input)
-        let res2 = p2.parse(input)
+        let res1 = try p1.parse(input)
+        let res2 = try p2.parse(input)
         
         XCTAssertTrue(res1 == res2)
     }
     
-    func test_or_operator_second() {
+    func test_or_operator_second() throws  {
         let p1 = char("b") | char("a")
         let p2 = char("b").or(char("a"))
         
         let input = "abc"
-        let res1 = p1.parse(input)
-        let res2 = p2.parse(input)
+        let res1 = try p1.parse(input)
+        let res2 = try p2.parse(input)
         
         XCTAssertTrue(res1 == res2)
     }
 
-    func test_then_operator() {
+    func test_then_operator() throws  {
         let p1 = char("a") >> char("b")
         let p2 = char("a").then(char("b"))
         
         let input = "abc"
-        let res1 = p1.parse(input)
-        let res2 = p2.parse(input)
+        let res1 = try p1.parse(input)
+        let res2 = try p2.parse(input)
         
         XCTAssertTrue(res1 == res2)
     }
     
-    func test_map_operator() {
+    func test_map_operator() throws  {
         let f: (String) -> Int = { $0.count }
         let p = string("abc") ^^ f
         
-        let res = p.parse("abcde")
+        let res = try p.parse("abcde")
         XCTAssertTrue(res == .success(result: 3, rest: "de"))
     }
     
-    func test_map_operator_precendence() {
+    func test_map_operator_precendence() throws  {
         let p = char("a") >> char("b") ^^ { String($0).unicodeScalars.first?.value ?? 0 }
-        let res = p.parse("abc")
+        let res = try p.parse("abc")
         
         XCTAssertTrue(res == .success(result: 98, rest: "c"))
     }
     
-    func test_map_operator_value() {
+    func test_map_operator_value() throws  {
         let p = string("abc") ^^^ "cba"
         
-        let res = p.parse("abcde")
+        let res = try p.parse("abcde")
         XCTAssertTrue(res == .success(result: "cba", rest: "de"))
     }
     
-    func test_atLeastOnce_operator() {
+    func test_atLeastOnce_operator() throws  {
         let p1 = char("a")+
         
-        let res1 = p1.parse("aaaa")
+        let res1 = try  p1.parse("aaaa")
         XCTAssertEqual(try res1.unwrap(), ["a", "a", "a", "a"])
         
-        let res2 = p1.parse("b")
+        let res2 = try p1.parse("b")
         XCTAssertTrue(res2.isFailed())
     }
     
     func test_rep_operator() throws {
         let p = char("a")*
         
-        let res1 = p.parse("aa")
+        let res1 = try p.parse("aa")
         XCTAssertEqual(try res1.unwrap(), ["a", "a"])
         
-        let res2 = p.parse("bb")
+        let res2 = try p.parse("bb")
         XCTAssertEqual(try res2.unwrap(), [])
     }
     
     func test_rep_fail_operator() throws {
-        let res1 = digit.rep.parse("a")
+        let res1 = try digit.rep.parse("a")
         XCTAssertEqual(try res1.unwrap(), [])
     }
     
@@ -95,23 +95,23 @@ class Operators_TestCase: XCTestCase {
         let p2 = char("a").fallback("b")
         
         let input = "cba"
-        let res1 = p1.parse(input)
-        let res2 = p2.parse(input)
+        let res1 = try p1.parse(input)
+        let res2 = try p2.parse(input)
         XCTAssertTrue(res1 == res2)
         
         let p3 = char("a").map({ $0.description }) ?? digit.map({ $0.description })
-        let res3 = p3.parse("1")
+        let res3 = try p3.parse("1")
         XCTAssertEqual(try res3.unwrap(), "1")
-        let res4 = p3.parse("a")
+        let res4 = try p3.parse("a")
         XCTAssertEqual(try res4.unwrap(), "a")
-        let res5 = p3.parse("b")
+        let res5 = try p3.parse("b")
         XCTAssertTrue(res5.isFailed())
     }
     
     func test_precedence() throws {
         // ~ has higher presedence than ^^
         let p = char("a") ~> char("b") <~ char("c") ^^ { String($0) }
-        let res1 = p.parse("abcd")
+        let res1 = try p.parse("abcd")
         XCTAssertEqual(try res1.unwrap(), "b")
         XCTAssertEqual(try res1.rest(), "d")
         
@@ -135,17 +135,17 @@ class Operators_TestCase: XCTestCase {
         XCTAssertEqual(res4.1, 4)
     }
     
-    func test_patternMatching() {
+    func test_patternMatching() throws {
         switch "abc" {
         case L.asciiString: ()
         default: XCTFail("'abc' did not match L.asciiString")
         }
-        
+
         switch "a" {
         case L.char: ()
         default: XCTFail("'a' did not match L.char'")
         }
-        
+
         switch "abc" {
         case L.char: XCTFail("'abc' should not match L.char because not the whole String matches")
         case L.digit: XCTFail("'abc' is no digit")

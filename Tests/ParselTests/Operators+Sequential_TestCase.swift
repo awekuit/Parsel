@@ -13,7 +13,7 @@ class Operators_Sequential_TestCase: XCTestCase {
     func test_sequential_success() throws {
         let p = char("a") ~ char("b") ~ char("c") ~ char("d") ~ char("e") ~ char("f") ~ char("g") ~ char("h") ~ char("i") ~ char("j") ~ char("k")
         let input = "abcdefghijk"
-        let res = p.parse(input)
+        let res = try p.parse(input)
         let value = try res.unwrap()
         XCTAssertEqual(value.0, "a")
         XCTAssertEqual(value.1, "b")
@@ -36,11 +36,11 @@ class Operators_Sequential_TestCase: XCTestCase {
     
     func test_sequential_fail() throws {
         let p = char("a") ~ char("b") ~ char("c") ~ char("d") ~ char("e") ~ char("f") ~ char("g") ~ char("h") ~ char("i") ~ char("j") ~ char("k")
-        let res = p.parse("a")
+        let res = try p.parse("a")
         XCTAssertEqual(try res.error() as! TestError, TestError(1))
     }
     
-    func test_sequential() {
+    func test_sequential() throws{
         let p1 = char("a") ~> char("b")
         let p2 = char("a") <~ char("b")
         
@@ -58,7 +58,7 @@ class Operators_Sequential_TestCase: XCTestCase {
     func test_sequential_otherWayAround() throws {
         let p = char("a") ~ (char("b") ~ (char("c") ~ (char("d") ~ (char("e") ~ (char("f") ~ (char("g") ~ (char("h") ~ (char("i") ~ (char("j") ~ char("k"))))))))))
         let input = "abcdefghijk"
-        let res = p.parse(input)
+        let res = try p.parse(input)
         let value = try res.unwrap()
         XCTAssertEqual(value.0, "a")
         XCTAssertEqual(value.1, "b")

@@ -17,7 +17,7 @@ We can now simply extend this to create a parser that parses an addition of two 
 ```Swift
 let addition = (digit ~ L.plus ~ digit).map { a, _, b in a + b } // `L.plus` is a predefined parser that parses the `+` sign
 
-let result = addition.parse("2+4")
+let result = try! addition.parse("2+4")
 try! result.unwrap() // Int: 6
 ```
 
@@ -40,7 +40,7 @@ let addition = number ~ L.plus ~ number ^^ { a, _, b in // ^^ is convenience for
     return a + b
 }
 
-let result = addition.parse("123+456")
+let result = try! addition.parse("123+456")
 try! result.unwrap() // Int: 579
 ```
 

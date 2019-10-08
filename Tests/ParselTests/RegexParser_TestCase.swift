@@ -23,23 +23,23 @@ class RegexParser_TestCase: XCTestCase {
     
     func test_parse_number() throws {
         let parser = RegexParser("[0-9]+") ^^ { r in Int(r)! }
-        let result = parser.parse("1234")
+        let result = try parser.parse("1234")
         XCTAssertEqual(try result.unwrap(), 1234)
         
-        XCTAssertFalse(parser.parse("abc").isSuccess())
+        XCTAssertFalse(try parser.parse("abc").isSuccess())
     }
     
     func test_parse_lowercasedLetters() throws {
         let parser = RegexParser("[a-z]+")
-        let result = parser.parse("abc")
+        let result = try parser.parse("abc")
         XCTAssertEqual(try result.unwrap(), "abc")
         
-        XCTAssertFalse(parser.parse("1234").isSuccess())
+        XCTAssertFalse(try parser.parse("1234").isSuccess())
     }
     
     func test_parse_fail() throws {
         let parser = "[0-9]".r
-        let result = parser.parse("a")
+        let result = try parser.parse("a")
         XCTAssertTrue(result.isFailed())
         let error = try result.error() as! RegexParser.Error
         guard case let .doesNotMatch(pattern, input) = error else {
@@ -51,7 +51,7 @@ class RegexParser_TestCase: XCTestCase {
     
     func test_parse_fail_invalidRegex() throws {
         let parser = "[".r
-        let result = parser.parse("abc")
+        let result = try parser.parse("abc")
         let error = try result.error() as! RegexParser.Error
         guard case let .invalidRegex(regex) = error else {
             return XCTFail("Entered invalid regex, but got \(error) instead.")
@@ -61,28 +61,28 @@ class RegexParser_TestCase: XCTestCase {
     
     func test_parse_mail() throws {
         let p = R.mail
-        let res1 = p.parse("mail@benchr.de")
+        let res1 = try p.parse("mail@benchr.de")
         XCTAssertEqual(try res1.unwrap(), "mail@benchr.de")
         
-        let res2 = p.parse("mail@mail@benchr.de")
+        let res2 = try p.parse("mail@mail@benchr.de")
         XCTAssertTrue(res2.isFailed())
     }
     
     func test_parse_httpAddress() throws {
         let p = R.httpAddress
-        let res1 = p.parse("https://www.google.de")
+        let res1 = try p.parse("https://www.google.de")
         XCTAssertEqual(try res1.unwrap(), "https://www.google.de")
         
-        let res2 = p.parse("http://https://facebook.com")
+        let res2 = try p.parse("http://https://facebook.com")
         XCTAssertTrue(res2.isFailed())
     }
     
     func test_parse_ipAddress() throws {
         let p = R.ipAddress
-        let res1 = p.parse("192.168.2.1")
+        let res1 = try p.parse("192.168.2.1")
         XCTAssertEqual(try res1.unwrap(), "192.168.2.1")
         
-        let res2 = p.parse("5454.242.545.1")
+        let res2 = try p.parse("5454.242.545.1")
         XCTAssertTrue(res2.isFailed())
     }
     
@@ -99,7 +99,7 @@ class RegexParser_TestCase: XCTestCase {
         ]
         
         for test in tests {
-            let res1 = p.parse(test)
+            let res1 = try p.parse(test)
             XCTAssertTrue(test.hasPrefix(try res1.unwrap()))
         }
         
@@ -110,7 +110,7 @@ class RegexParser_TestCase: XCTestCase {
         ]
         
         for test in failTests {
-            let res2 = p.parse(test)
+            let res2 = try p.parse(test)
             XCTAssertTrue(res2.isFailed())
         }
     }

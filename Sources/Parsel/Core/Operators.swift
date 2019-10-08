@@ -134,8 +134,8 @@ public func ??<T, R>(lhs: Parser<T, R>, rhs: @escaping @autoclosure () -> Parser
 ///   - lhs: the pattern, in this case the parser that should succeed
 ///   - rhs: the value that the pattern should be matched with
 /// - Returns: true if the parsing succeeds, false otherwise
-public func ~=<T, U>(lhs: Parser<T, U>, rhs: T) -> Bool {
-    let res = lhs.parse(rhs)
+public func ~=<T, U>(lhs: Parser<T, U>, rhs: T) throws -> Bool {
+    let res = try lhs.parse(rhs)
     guard let rest = try? res.rest() else {
         return false
     }
