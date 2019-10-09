@@ -11,8 +11,8 @@ extension Parser {
     ///
     /// - Parameter other: another parser to execute afterwards
     /// - Returns: a parser that first parses self and then other on the rest of self
-    public func then<B>(_ other: @escaping @autoclosure () -> Parser<T, B>) -> Parser<T, B> {
-        return self.flatMap { _ in other() }
+    public func then<B>(_ other: @escaping @autoclosure () throws -> Parser<T, B>) -> Parser<T, B> {
+        return self.flatMap { _ in try other() }
     }
 
     /// Erases the type of the parser
@@ -40,7 +40,7 @@ extension Parser {
     ///
     /// - Parameter other: another parser which should be used as fallback
     /// - Returns: a parser that parses self and if it fails, if parses other
-    public func or(_ other: @escaping @autoclosure () -> Parser<T, R>) -> Parser<T, R> {
+    public func or(_ other: @escaping @autoclosure () throws -> Parser<T, R>) -> Parser<T, R> {
         return Parser { tokens in
             let result = try self.parse(tokens)
             switch result {
@@ -95,7 +95,7 @@ extension Parser {
     ///
     /// *NOTE* If parsing fails, there are no tokens consumed!
     /// *NOTE* This parser never fails!
-    public func fallback(_ defaultValue: @escaping @autoclosure () -> R) -> Parser<T, R> {
+    public func fallback(_ defaultValue: @escaping @autoclosure () throws -> R) -> Parser<T, R> {
         return Parser { tokens in
             let result = try self.parse(tokens)
             switch result {
@@ -115,7 +115,7 @@ extension Parser {
     ///
     /// - Parameter defaultValue: the parser to use in case of failure
     /// - Returns: a parser that first tries self.parse and only uses defaultValue if self failed.
-    public func fallback(_ defaultValue: @escaping @autoclosure () -> Parser<T, R>) -> Parser<T, R> {
+    public func fallback(_ defaultValue: @escaping @autoclosure () throws -> Parser<T, R>) -> Parser<T, R> {
         return Parser { tokens in
             switch try self.parse(tokens) {
             case let .success(result, rest):

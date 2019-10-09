@@ -8,14 +8,17 @@
 /// Generic errors that could occur on Core parsers
 public enum Errors: ParseError {
 
-    /// is thrown when `subscript(aka [])` is called
-    case subscriptFailed
-    
     /// is thrown when `.unwrap()` is called on a failed ParseResult
     case unwrappedFailedResult
-    
+
     /// is thrown when `error()` is called on a succeeded ParseResult
     case errorFromSuccessfulResult
+
+    /// is thrown when an error is thrown due to the default value
+    case fallbackFailed
+
+    /// is returned when an exception is thrown by `Parser.parse` when `Parser.subscript(aka [])` is called
+    case subscriptFailed
     
     /// is returned when `Parser.or` is called on an empty collection of parsers
     case conjunctionOfEmptyCollection

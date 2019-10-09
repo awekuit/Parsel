@@ -70,7 +70,7 @@ open class Parser<T, R> where T: Sequence {
     ///
     /// - Parameter tranform: function that maps a parse result to a new parser
     /// - Returns: a new parser that combines both parse operations.
-    public func flatMap<B>(_ tranform: @escaping (R) -> Parser<T, B>) -> Parser<T, B> {
+    public func flatMap<B>(_ tranform: @escaping (R) throws -> Parser<T, B>) -> Parser<T, B> {
         return Parser<T, B> { tokens in
             return try self.parse(tokens).flatMap { result, rest in
                 return try tranform(result).parse(rest)
@@ -82,9 +82,9 @@ open class Parser<T, R> where T: Sequence {
     ///
     /// - Parameter transform: transforming function that maps from R to B
     /// - Returns: a new parser that calls f on each successful parsing operation
-    public func map<B>(_ transform: @escaping (R) -> B) -> Parser<T, B> {
+    public func map<B>(_ transform: @escaping (R) throws -> B) -> Parser<T, B> {
         return self.flatMap { result -> Parser<T, B> in
-            return Parser.just(transform(result))
+            return Parser.just(try transform(result))
         }
     }
     

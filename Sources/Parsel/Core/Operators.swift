@@ -46,8 +46,8 @@ infix operator ^^^: ParserMapPrecedenceGroup
 ///   - lhs: the first parser to evaluate
 ///   - rhs: the second parser to evaluate
 /// - Returns: a parser that evaluates both, rhs and lhs, starting with lhs
-public func |<T, R>(lhs: Parser<T, R>, rhs: @escaping @autoclosure () -> Parser<T, R>) -> Parser<T, R> {
-    return lhs.or(rhs())
+public func |<T, R>(lhs: Parser<T, R>, rhs: @escaping @autoclosure () throws -> Parser<T, R>) -> Parser<T, R> {
+    return lhs.or(try rhs())
 }
 
 /// Convenience operator for 'then' concatenation.
@@ -56,8 +56,8 @@ public func |<T, R>(lhs: Parser<T, R>, rhs: @escaping @autoclosure () -> Parser<
 ///   - lhs: the first parser to evaluate
 ///   - rhs: the second parser to evaluate on lhs' rest
 /// - Returns: a parser that evaluates lhs and on it's rest rhs
-public func >><T, R, B>(lhs: Parser<T, R>, rhs: @escaping @autoclosure () -> Parser<T, B>) -> Parser<T, B> {
-    return lhs.then(rhs())
+public func >><T, R, B>(lhs: Parser<T, R>, rhs: @escaping @autoclosure () throws -> Parser<T, B>) -> Parser<T, B> {
+    return lhs.then(try rhs())
 }
 
 /// Convenience operator for map operations.
@@ -77,8 +77,8 @@ public func ^^<T, R, B>(lhs: Parser<T, R>, rhs: @escaping (R) -> B) -> Parser<T,
 ///   - lhs: the parser which result should be replaced
 ///   - rhs: the value that should replace the result of lhs
 /// - Returns: a parser that parses lhs and replaces its result with rhs if it succeeds
-public func ^^^<T, R, B>(lhs: Parser<T, R>, rhs: @escaping @autoclosure () -> B) -> Parser<T, B> {
-    return lhs.map({ _ in rhs() })
+public func ^^^<T, R, B>(lhs: Parser<T, R>, rhs: @escaping @autoclosure () throws -> B) -> Parser<T, B> {
+    return lhs.map({ _ in try rhs() })
 }
 
 /// Convenience operator for atLeastOnce operation.
@@ -103,8 +103,8 @@ public postfix func *<T, R>(lhs: Parser<T, R>) -> Parser<T, [R]> {
 ///   - lhs: the parser that could possibly fail
 ///   - rhs: the default value that should be used instead
 /// - Returns: a parser that tries to parse self and uses rhs if parsing failed.
-public func ??<T, R>(lhs: Parser<T, R>, rhs: @escaping @autoclosure () -> R) -> Parser<T, R> {
-    return lhs.fallback(rhs())
+public func ??<T, R>(lhs: Parser<T, R>, rhs: @escaping @autoclosure () throws -> R) -> Parser<T, R> {
+    return lhs.fallback(try rhs())
 }
 
 /// Convenience operator for fallback with parser operation.
@@ -113,8 +113,8 @@ public func ??<T, R>(lhs: Parser<T, R>, rhs: @escaping @autoclosure () -> R) -> 
 ///   - lhs: the parser that could fail
 ///   - rhs: the parser that should be used instead
 /// - Returns: a parser that tries to parse self and parses rhs if self failed.
-public func ??<T, R>(lhs: Parser<T, R>, rhs: @escaping @autoclosure () -> Parser<T, R>) -> Parser<T, R> {
-    return lhs.fallback(rhs())
+public func ??<T, R>(lhs: Parser<T, R>, rhs: @escaping @autoclosure () throws -> Parser<T, R>) -> Parser<T, R> {
+    return lhs.fallback(try rhs())
 }
 
 /// ~= allows the usage of `Parser`s in switch-case pattern matching statements.
@@ -134,9 +134,8 @@ public func ??<T, R>(lhs: Parser<T, R>, rhs: @escaping @autoclosure () -> Parser
 ///   - lhs: the pattern, in this case the parser that should succeed
 ///   - rhs: the value that the pattern should be matched with
 /// - Returns: true if the parsing succeeds, false otherwise
-public func ~=<T, U>(lhs: Parser<T, U>, rhs: T) throws -> Bool {
-    let res = try lhs.parse(rhs)
-    guard let rest = try? res.rest() else {
+public func ~=<T, U>(lhs: Parser<T, U>, rhs: T) -> Bool {
+    guard let res = try? lhs.parse(rhs), let rest = try? res.rest() else {
         return false
     }
     return res.isSuccess() && !rest.contains(where: {_ in true})
